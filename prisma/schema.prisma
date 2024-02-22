@@ -1,0 +1,389 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User{
+  id   Int  @id @default(autoincrement())
+  username String @unique  @db.VarChar(70)
+  gmail String @unique @db.VarChar(100)
+  password String @db.VarChar(200)
+  createdAt DateTime @default(now()) 
+  deletedAt  DateTime ?
+  updatedAt DateTime ?
+  userMedia UserMedia[]
+  reseniaOfMovie reseniaOfMovie[]
+  liked liked[]
+  whoWached whoWached[]
+  watchList watchList[]
+}
+
+model UserMedia{
+  id Int @id @default(autoincrement())
+  userId Int
+  createdAt DateTime @default(now())
+  public_id String @db.VarChar(150)
+  url_public String @db.VarChar(150)
+  updated_at DateTime ?
+  user User @relation(fields: [userId], references: [id])
+}
+model Director{
+  idDirector Int @id @default(autoincrement())
+  name String @db.VarChar(100)
+  lastName String @db.VarChar(100)
+  description String @db.VarChar(300)
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  DirectorOfImage DirectorOfImage[]
+  movieDirector DirectorsOfMovies[]
+}
+
+model DirectorOfImage{
+  idDirectorImg Int @id @default(autoincrement())
+  urlImage String @db.VarChar(200)
+  public_id String @db.VarChar(200)
+  idDirector Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  director Director @relation(fields: [idDirector], references: [idDirector])
+}
+
+model Actor{
+  idActor Int @id @default(autoincrement())
+  name String @db.VarChar(100)
+  lastName String @db.VarChar(100)
+  description String @db.VarChar(300)
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  ImageOfActor ImageOfActor[]
+  cast Cast[]
+}
+
+model ImageOfActor{
+  idActorImg Int @id @default(autoincrement())
+  urlImage String @db.VarChar(200)
+  public_id String @db.VarChar(200)
+  idActor Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  actor Actor @relation(fields: [idActor], references: [idActor])
+}
+
+model Studios{
+  idStudio Int @id @default(autoincrement())
+  name String @db.VarChar(100)
+  moviestudi MovieStudios[]
+}
+
+
+model MovieStudios{
+  idMovieStudio Int @id @default(autoincrement())
+  idMovie Int
+  idStudio Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+  studio Studios @relation(fields: [idStudio], references: [idStudio])
+}
+
+// TODO add Model of releases countries
+
+
+
+
+// lenguajes talkeds in the movies
+model Lengauge{
+  idLenguageTalked Int @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+  movieslen LenguageOfMovie[]
+  anotherLenguage AnotherLenguageOfMovie[]
+}
+
+model AlternantiveTittles{
+  idAlternantiveTittle Int @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+   moviealternativetittle MovieAlternantiveTittle[]
+}
+
+// titulos alternstivos de las peliculas
+model MovieAlternantiveTittle{
+  idMovieAlternantiveTittle Int @id @default(autoincrement())
+  idMovie Int
+  idAlternantiveTittle Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+  alternantiveTittle AlternantiveTittles @relation(fields: [idAlternantiveTittle], references: [idAlternantiveTittle])
+}
+
+model Countries {
+  idCountry Int @id @default(autoincrement())
+  name  String @unique @db.VarChar(100)
+  countriesOfMovies CountryOfMovieWh[]
+  releases Releases[]
+
+}
+
+
+model Releases{
+  idreleases Int @id @default(autoincrement())
+  idCountry Int
+  idMovie Int 
+  dateOfRealeses DateTime 
+  place String @db.VarChar(200)
+  clasification String @db.VarChar(6)
+  type String ? @db.VarChar(50)
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movies Movie @relation(fields: [idMovie],references: [idMovie])
+  country Countries @relation(fields: [idCountry],references: [idCountry])
+
+}
+
+model Genero{
+  idGenero Int @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+  generoOfMovie GeneroOfMovie[]
+
+}
+
+model Temas{
+  idTema Int @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+  themOfMovie ThemOfMovie[]
+}
+
+// temas en la peliculas 
+model ThemOfMovie{
+  idThemOfMovie Int @id @default(autoincrement())
+  idTema Int 
+  idMovie Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movies Movie @relation(fields: [idMovie],references: [idMovie])
+  temas Temas @relation(fields: [idTema],references: [idTema])
+}
+
+//generos de las peliculas
+model GeneroOfMovie{
+  idGeneroOfMovie Int @id @default(autoincrement())
+  idMovie Int
+  idGenero Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+  genero Genero @relation(fields: [idGenero], references: [idGenero])
+}
+
+model Movie{
+  idMovie Int @id @default(autoincrement())
+  title String @db.VarChar(100)
+  year DateTime 
+  slogan  String ? @db.VarChar(100)
+  description String @db.VarChar(300)
+  duration Int 
+  directroOfMovie DirectorsOfMovies[]
+  countryOfMovieWh CountryOfMovieWh[]
+  imageOfMovie ImageOfMovie[]
+  cast Cast[]
+  movieStudios MovieStudios[]
+  lenguageOfMovie LenguageOfMovie[]
+  anotherLenguageOfMovie AnotherLenguageOfMovie[]
+  movieAlternantiveTittle MovieAlternantiveTittle[]
+  generoOfMovie GeneroOfMovie[] 
+  themOfMovie ThemOfMovie[]
+  releases Releases[]
+  crewofMovie crewOfMovie[]
+  rerensiaOfMovie reseniaOfMovie[]
+  liked liked[]
+  whoWached whoWached[]
+  whereWatch whereWatch[]
+  watchList watchList[]
+}
+
+// idiomas hablados en la peliculas 
+model LenguageOfMovie{
+  idLenguageOfMovie Int @id @default(autoincrement())
+  idMovie Int
+  idLenguage Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+  lenguage Lengauge @relation(fields: [idLenguage], references: [idLenguageTalked])
+}
+
+// otros idiomas hablados en la pelicula 
+model AnotherLenguageOfMovie{
+  idAnotherLenguageOfMovie Int @id @default(autoincrement())
+  idMovie Int
+  idLenguage Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+  lenguage Lengauge @relation(fields: [idLenguage], references: [idLenguageTalked])
+}
+
+
+model CountryOfMovieWh {
+  idCountryOfMovie Int @id @default(autoincrement())
+  idMovie Int 
+  idCountry Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+  country Countries @relation(fields: [idCountry], references: [idCountry])
+
+}
+
+model DirectorsOfMovies{
+  idDirectorOfMovie Int @id @default(autoincrement())
+  idDirector Int
+  idMovie Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  director Director @relation(fields: [idDirector], references: [idDirector])
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+}
+
+model Cast {
+  idCast Int @id @default(autoincrement())
+  idActor Int
+  idMovie Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  actor Actor @relation(fields: [idActor], references: [idActor])
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+
+}
+
+model ImageOfMovie{
+  idImageOfMovie Int @id @default(autoincrement())
+  urlImage String @db.VarChar(200)
+  public_id String @db.VarChar(200)
+  typeOfImage String @db.VarChar(100)
+  idMovie Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+}
+
+
+// crew of the movie
+model CrewOfPeople{
+  idCrewOfPeople Int @id @default(autoincrement())
+  name String @db.VarChar(100)
+  lastName String @db.VarChar(100)
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  crewofMovie crewOfMovie[]
+
+}
+
+// crew of movie
+
+model crewOfMovie{
+  idcrewOfMovie Int @id @default(autoincrement())
+  idCrewOfPeople Int
+  idMovie Int
+  type String @db.VarChar(100)
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  crewOfPeople CrewOfPeople @relation(fields: [idCrewOfPeople], references: [idCrewOfPeople])
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+}
+
+
+// likes movies
+model reseniaOfMovie {
+  idReseniaOfMovie Int @id @default(autoincrement())
+  idMovie Int
+  idUser Int
+  resenia String @db.VarChar(300)
+  starts Float 
+  wached_at DateTime ?
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  containsSpoilers Boolean
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+  user User @relation(fields: [idUser], references: [id])
+  tags tags[]
+}
+
+// tagas of coment 
+model tags {
+  idTag Int @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+  idReseniaOfMovie Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  reseniaOfMovie reseniaOfMovie @relation(fields: [idReseniaOfMovie], references: [idReseniaOfMovie])
+}
+
+// likes movies
+model liked {
+  idLiked Int @id @default(autoincrement())
+  idMovie Int
+  idUser Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+  user User @relation(fields: [idUser], references: [id])
+}
+
+
+// whow watched the movie
+
+model whoWached{
+  idWhoWached Int @id @default(autoincrement())
+  idMovie Int
+  idUser Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+  user User @relation(fields: [idUser], references: [id])
+}
+
+
+// where watch the movie
+
+model whereWatch{
+  idWhereWatch Int @id @default(autoincrement())
+  idMovie Int
+
+  link String @db.VarChar(200)
+  imageservice String @db.VarChar(100)
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+ 
+}
+
+
+model watchList{
+  idWatchList Int @id @default(autoincrement())
+  idMovie Int
+  idUser Int
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  movie Movie @relation(fields: [idMovie], references: [idMovie])
+  user User @relation(fields: [idUser], references: [id])
+}
+
+
+
+
+
+
+
+
+
+
+
