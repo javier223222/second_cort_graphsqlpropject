@@ -109,7 +109,7 @@ model Lengauge{
 
 model AlternantiveTittles{
   idAlternantiveTittle Int @id @default(autoincrement())
-  name String @unique @db.VarChar(100)
+  name String  @db.VarChar(100)
    moviealternativetittle MovieAlternantiveTittle[]
 }
 
