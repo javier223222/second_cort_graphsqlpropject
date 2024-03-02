@@ -3,6 +3,7 @@ import { CastType } from "../../controller/types/CastType"
 import { DirectorToMovieType } from "../../controller/types/DirectorType"
 import { ErrorType } from "../../controller/types/ErrorType"
 import { GenerOfMovieType } from "../../controller/types/GenerOfMovie"
+import { PaginationType } from "../../controller/types/PaginationType"
 import { errorMesagge } from "../../utils/ErroMessage"
 import { db } from "../repositories/mysql.repo"
 
@@ -45,9 +46,47 @@ export const addLenguages=async(lenguages:AnotherLenguagesType):Promise<AnotherL
  * @returns  un array de AnotherLenguagesType con la informacion de la tabla Lenguages o un errortype con el error
  */
 
-export const getLenguages=async(idMovie:number):Promise<Array<any>|ErrorType>=>{
+export const getLenguages=async(idMovie:number,page ?:number,limit ?:number):Promise<Array<any>|ErrorType|PaginationType>=>{
     try{
+        if(page && limit){
+            const skip=(page-1)*limit
+            const totalLenguages:number=await db.lenguageOfMovie.count({
+                where:{
+                    idMovie:idMovie
+                }
+            })
+            const totalpages=Math.ceil(totalLenguages/limit)
+            const result=await db.lenguageOfMovie.findMany({
+                skip:skip,
+                take:limit,
+                where:{
+                    idMovie:idMovie
+                },
+                select:{
+                    idLenguage:true,
+                    idMovie:true,
+                    idLenguageOfMovie:true,
+                    created_at:true,
+                    lenguage:{
+                        select:{
+                            idLenguageTalked:true,
+                            name:true,
+                        
+                        }
+                    }
 
+                
+                },
+                orderBy:{
+                    created_at:"desc"
+                }
+            })
+            return {
+              result:result,
+                totalPage:totalpages,
+                currentPage:page,
+            }
+        }
         const result=await db.lenguageOfMovie.findMany({
             where:{
                 idMovie:idMovie
@@ -56,10 +95,21 @@ export const getLenguages=async(idMovie:number):Promise<Array<any>|ErrorType>=>{
                 idLenguage:true,
                 idMovie:true,
                 idLenguageOfMovie:true,
-                created_at:true
+                created_at:true,
+                lenguage:{
+                    select:{
+                        idLenguageTalked:true,
+                        name:true,
+                    
+                    }
+                }
+            
+            },
+            orderBy:{
+                created_at:"desc"
             }
         })
-        return result
+    return result
 
     }catch(e:any){
         return errorMesagge("Erro al obtener los registros de la tabla Lenguages",e.message,500)

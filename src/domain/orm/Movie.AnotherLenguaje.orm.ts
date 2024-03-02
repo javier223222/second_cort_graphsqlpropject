@@ -1,6 +1,7 @@
 import { AnotherLenguagesType } from "../../controller/types/AnotherLenguages"
 
 import { ErrorType } from "../../controller/types/ErrorType"
+import { PaginationType } from "../../controller/types/PaginationType"
 
 import { errorMesagge } from "../../utils/ErroMessage"
 import { db } from "../repositories/mysql.repo"
@@ -44,8 +45,48 @@ export const addAnotherLenguage =async(anotherLenguaj:AnotherLenguagesType):Prom
  * funcion para obtener todos los registros de la tabla AnotherLenguages
  * @returns  un array de AnotherLenguagesType con la informacion de la tabla AnotherLenguages o un errortype con el error
  */
-export const getAnotherLenguages=async(idMovie:number):Promise<Array<any>|ErrorType>=>{
+export const getAnotherLenguages=async(idMovie:number,page ?:number,limit ?:number):Promise<Array<any>|ErrorType|PaginationType>=>{
    try{
+
+     if(page && limit){
+        const skip=(page-1)*limit
+        const totallenguges:number=await db.anotherLenguageOfMovie.count({
+            where:{
+                idMovie:idMovie
+            }
+        })
+        const totalpages=Math.ceil(totallenguges/limit)
+        const result=await db.anotherLenguageOfMovie.findMany({
+            skip:skip,
+            take:limit,
+            where:{
+                idMovie:idMovie
+            },
+            orderBy:{
+              created_at:"desc"
+            },
+            select:{
+                idLenguage:true,
+                idMovie:true,
+                idAnotherLenguageOfMovie:true,
+                created_at:true,
+                lenguage:{
+                    select:{
+                        idLenguageTalked:true,
+                        name:true,
+                    }
+                }
+              }
+        })
+
+        return {
+
+            totalPage:totalpages,
+            currentPage:page,
+            result:result
+        
+        }
+     }
          const result=await db.anotherLenguageOfMovie.findMany({
               where:{
                 idMovie:idMovie
@@ -54,7 +95,16 @@ export const getAnotherLenguages=async(idMovie:number):Promise<Array<any>|ErrorT
                 idLenguage:true,
                 idMovie:true,
                 idAnotherLenguageOfMovie:true,
-                created_at:true
+                created_at:true,
+                lenguage:{
+                    select:{
+                        idLenguageTalked:true,
+                        name:true,
+                    }
+                }
+              },
+              orderBy:{
+                created_at:"desc"
               }
          })
 

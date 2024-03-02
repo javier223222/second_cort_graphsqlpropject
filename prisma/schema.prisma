@@ -189,7 +189,8 @@ model Movie{
   year DateTime 
   slogan  String ? @db.VarChar(100)
   description String @db.VarChar(300)
-  duration Int 
+  duration Int
+  created_at DateTime @default(now()) 
   directroOfMovie DirectorsOfMovies[]
   countryOfMovieWh CountryOfMovieWh[]
   imageOfMovie ImageOfMovie[]
@@ -357,7 +358,7 @@ model whoWached{
 model whereWatch{
   idWhereWatch Int @id @default(autoincrement())
   idMovie Int
-
+ name String @db.VarChar(100)
   link String @db.VarChar(200)
   imageservice String @db.VarChar(100)
   created_at DateTime @default(now())

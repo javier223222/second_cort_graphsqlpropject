@@ -2,6 +2,7 @@ import { AlternativeTittleType } from "../../controller/types/AlternativeTittleT
 import { errorMesagge } from "../../utils/ErroMessage"
 import { ErrorType } from "../../controller/types/ErrorType"
 import { db } from "../repositories/mysql.repo"
+import { PaginationType } from "../../controller/types/PaginationType"
 
 /**
  * funcion para agregar un titulo alternativo a la pelicula
@@ -39,11 +40,51 @@ export const addAlternativeMovieOfMovie = async(alternativeTitle:AlternativeTitt
 
 /**
  * funcion par obtener todas las peliculas con sus titulos alternativos
- * @param idMovie id de la pelicula
+ * @param idMovie  id de la pelicula
  * @returns   un array de AlternativeTittleType con la informacion de la tabla AnotherLenguages o un errortype con el error
  */
-export const getAnotherLenguages=async(idMovie:number):Promise<Array<any>|ErrorType>=>{
+export const getAnotherLenguages=async(idMovie:number,page ?:number,limit ?:number):Promise<Array<any>|ErrorType|PaginationType>=>{
     try{
+        if(page && limit){
+            const skip=(page-1)*limit
+            const totallenguges:number=await db.movieAlternantiveTittle.count({
+                where:{
+                    idMovie:idMovie
+                }
+            })
+            const totalpages=Math.ceil(totallenguges/limit)
+            const result=await db.movieAlternantiveTittle.findMany({
+                skip:skip,
+                take:limit,
+                where:{
+                    idMovie:idMovie
+                },
+                select:{
+                    idMovie:true,
+                    idAlternantiveTittle:true,
+                    idMovieAlternantiveTittle:true,
+                    created_at:true,
+                    alternantiveTittle:{
+                       select:{
+                           idAlternantiveTittle:true,
+                           name:true,
+                       }
+                    }
+                     },
+                orderBy:{
+                    created_at:"desc"
+                }
+            })
+
+            return {
+                totalPage:totalpages,
+                currentPage:page,
+                result:result
+            }
+
+
+
+        }
             const result=await db.movieAlternantiveTittle.findMany({
                   where:{
                  idMovie:idMovie
@@ -52,8 +93,17 @@ export const getAnotherLenguages=async(idMovie:number):Promise<Array<any>|ErrorT
                  idMovie:true,
                  idAlternantiveTittle:true,
                  idMovieAlternantiveTittle:true,
-                 created_at:true
-                  }
+                 created_at:true,
+                 alternantiveTittle:{
+                    select:{
+                        idAlternantiveTittle:true,
+                        name:true,
+                    }
+                 }
+                  },
+                orderBy:{
+                    created_at:"desc"
+                }  
             })
             return result
      }catch(e:any){

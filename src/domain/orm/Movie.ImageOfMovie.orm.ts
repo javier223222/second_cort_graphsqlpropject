@@ -5,6 +5,7 @@ import { ErrorType } from "../../controller/types/ErrorType"
 import { errorMesagge } from "../../utils/ErroMessage"
 import { db } from "../repositories/mysql.repo"
 import {ImageOfMovieType} from "../../controller/types/ImageOfMovieType"
+import { PaginationType } from "../../controller/types/PaginationType"
 
 /**
  * funcion para agregar una iamge a la pelicula
@@ -50,9 +51,42 @@ export const addImageOfMovie = async(image:ImageOfMovieType):Promise<ImageOfMovi
  * @param idMovie id de la pelicula
  * @returns  un array de ImageOfMovieType con la informacion de la tabla ImageOfMovie o un errortype con el error
  */
-export const getImagesOfMovie=async(idMovie:number):Promise<Array<any>|ErrorType>=>{
+export const getImagesOfMovie=async(idMovie:number,page ?:number,limit ?:number):Promise<Array<any>|ErrorType|PaginationType>=>{
     try{
+        if(page && limit){
+            const skip=(page-1)*limit
+            const totalImages:number=await db.imageOfMovie.count({
+                where:{
+                    idMovie:idMovie
+                }
+            })
+            const totalpages=Math.ceil(totalImages/limit)
+            const result=await db.imageOfMovie.findMany({
+                skip:skip,
+                take:limit,
+                where:{
+                    idMovie:idMovie
+                },
+                select:{
+                    idImageOfMovie:true,
+                    urlImage:true,
+                    idMovie:true,
+                    public_id:true,
+                    typeOfImage:true,
+                    created_at:true
+                },
+                orderBy:{
+                    created_at:"desc"
+                }
+            })
+            return {
+                result:result,
+                totalPage:totalpages,
+                currentPage:page,
+            }
+        }
         const result=await db.imageOfMovie.findMany({
+            
             where:{
                 idMovie:idMovie
             },
@@ -62,8 +96,13 @@ export const getImagesOfMovie=async(idMovie:number):Promise<Array<any>|ErrorType
                 idMovie:true,
                 public_id:true,
                 typeOfImage:true,
-                created_at:true
+                created_at:true,
+                
+            },
+            orderBy:{
+                created_at:"desc"
             }
+            
         })
         return result
     }catch(e:any){

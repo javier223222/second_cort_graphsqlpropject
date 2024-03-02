@@ -1,6 +1,7 @@
 
 import { DirectorToMovieType } from "../../controller/types/DirectorType"
 import { ErrorType } from "../../controller/types/ErrorType"
+import { PaginationType } from "../../controller/types/PaginationType"
 
 import { errorMesagge } from "../../utils/ErroMessage"
 import { db } from "../repositories/mysql.repo"
@@ -47,8 +48,54 @@ export const addDirector = async(directInfo:DirectorToMovieType):Promise<Directo
   * @returns  un array de DirectorToMovieType con la informacion de la tabla DirectorsOfMovies o un errortype con el error
   */
  
-export const getDirectors=async(idMovie:number):Promise<Array<any>|ErrorType>=>{
+export const getDirectors=async(idMovie:number,page ?:number,limit ?:number):Promise<Array<any>|PaginationType>=>{
     try{
+
+        if(page && limit){
+            const skip=(page-1)*limit
+            const totalDirectors:number=await db.directorsOfMovies.count({
+                where:{
+                    idMovie:idMovie
+                }
+            })
+            const totalpages=Math.ceil(totalDirectors/limit)
+            const result=await db.directorsOfMovies.findMany({
+                skip:skip,
+                take:limit,
+                where:{
+                    idMovie:idMovie
+                },
+                select:{
+                    idDirector:true,
+                    idMovie:true,
+                    idDirectorOfMovie:true,
+                    created_at:true,
+                    director:{
+                        select:{
+                            idDirector:true,
+                            name:true,
+                            lastName:true,
+                            DirectorOfImage:{
+                                select:{
+                                    idDirectorImg:true,
+                                     urlImage:true
+                                }
+                            
+                            }
+                        }
+                    
+                    }
+                },
+                orderBy:{
+                    created_at:"desc"
+                }
+            })
+            return {
+                 result:result,
+                 totalPage:totalpages,
+                 currentPage:page
+            }
+        }
         const result=await db.directorsOfMovies.findMany({
             where:{
                 idMovie:idMovie
@@ -57,12 +104,30 @@ export const getDirectors=async(idMovie:number):Promise<Array<any>|ErrorType>=>{
                 idDirector:true,
                 idMovie:true,
                 idDirectorOfMovie:true,
-                created_at:true
+                created_at:true,
+                director:{
+                    select:{
+                        idDirector:true,
+                        name:true,
+                        lastName:true,
+                        DirectorOfImage:{
+                            select:{
+                                idDirectorImg:true,
+                                 urlImage:true
+                            }
+                        
+                        }
+                    }
+                
+                }
+            },
+            orderBy:{
+                created_at:"desc"
             }
         })
         return result
     }catch(e:any){
-        return errorMesagge("Erro al obtener los registros de la tabla DirectorsOfMovies",e.message,500)
+        throw new Error("Error in getDirectorsOfMovie")
     }
 }
 /**

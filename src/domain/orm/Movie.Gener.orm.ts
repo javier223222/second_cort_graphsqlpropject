@@ -1,6 +1,7 @@
 
 import { ErrorType } from "../../controller/types/ErrorType"
 import { GenerOfMovieType } from "../../controller/types/GenerOfMovie"
+import { PaginationType } from "../../controller/types/PaginationType"
 import { errorMesagge } from "../../utils/ErroMessage"
 import { db } from "../repositories/mysql.repo"
 
@@ -44,8 +45,44 @@ export const addGenerOfMovie = async(generIn:GenerOfMovieType):Promise<GenerOfMo
 }
 
 
-export const getGenerOfMovie=async(idMovie:number):Promise<Array<any>|ErrorType>=>{
+export const getGenerOfMovie=async(idMovie:number,page ?:number,limit?:number):Promise<Array<any>|PaginationType>=>{
     try{
+        if(page && limit){
+            const skip=(page-1)*limit
+            const totalGener:number=await db.generoOfMovie.count({
+                where:{
+                    idMovie:idMovie
+                }
+            })
+            const totalpages=Math.ceil(totalGener/limit)
+            const result=await db.generoOfMovie.findMany({
+                skip:skip,
+                take:limit,
+                where:{
+                    idMovie:idMovie
+                },
+                select:{
+                    idGenero:true,
+                    idMovie:true,
+                    idGeneroOfMovie:true,
+                    created_at:true,
+                    genero:{
+                        select:{
+                            idGenero:true,
+                            name:true,
+                        }
+                    }
+                },
+                orderBy:{
+                    created_at:"desc"
+                }
+            })
+            return {
+                result:result,
+                totalPage:totalpages,
+                currentPage:page,
+            }
+        }
         const result=await db.generoOfMovie.findMany({
             where:{
                 idMovie:idMovie
@@ -54,12 +91,21 @@ export const getGenerOfMovie=async(idMovie:number):Promise<Array<any>|ErrorType>
                 idGenero:true,
                 idMovie:true,
                 idGeneroOfMovie:true,
-                created_at:true
+                created_at:true,
+                genero:{
+                    select:{
+                        idGenero:true,
+                        name:true,
+                    }
+                }
+            },
+            orderBy:{
+                created_at:"desc"
             }
         })
         return result
     }catch(e:any){
-        return errorMesagge("Erro al obtener los registros de la tabla GenerOfMovie",e.message,500)
+      throw new Error(e.message)
     }
 }
 /**
