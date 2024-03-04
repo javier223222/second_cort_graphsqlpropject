@@ -41,3 +41,6 @@ export interface IStudioMovieController{
 export interface IGenersOfMovieController{
     getGenersOfMovies(idMovie:number,page ?:number,limit ?:number):Promise<Array<any>|PaginationType>
 }
+export interface ITypeEventController{
+    addTypeEvent(url:string,idUser:number,type:any[],allType?:boolean):Promise<string>
+}

@@ -89,19 +89,40 @@ export const typeDefs=`
       name:String,
     } 
 
+    type PaginataionActor{
+      hasNextPage:Boolean,
+      hasPreviousPage:Boolean,
+      cast:[Cast],
+      endCursor:String,
+      startCursor:String,
+      currentPage:Int,
+      totalPage:Int,
+
+
+    }
+
+    type PaginataionCountry{
+      hasNextPage:Boolean,
+      hasPreviousPage:Boolean,
+      country:[CountryOfMovie],
+      endCursor:String,
+      startCursor:String,
+      currentPage:Int,
+      totalPage:Int,
+    }
+
 
    type Query{
        movies:[Movie]
        users:[user]
        movie(idMovie:ID):Movie
-       actorOfMovie(idMovie:ID):[Cast]
+       actorOfMovie(idMovie:ID,page:Int,limit:Int):PaginataionActor
        getCurrentLoggedUser(token:String):User
-       getCountryOfMovie(idMovie:ID):[CountryOfMovie],
+       getCountryOfMovie(idMovie:ID,page:Int,limit:Int):PaginataionCountry,
        getDirectorOfMovie(idMovie:ID):[DirectorOfMovie],
        getStudioOfMovie(idMovie:ID):[StudioOfMovie],
        getGenerOfMovie(idMovie:ID):[GenerOfMovie]
 
-       
      
    }
    input UserInput{
@@ -144,7 +165,9 @@ export const typeDefs=`
          createActor(idMovie:Int,actor:newActor):Actor,
          deletActor(idCast:Int):Actor,
          addCountryOfMovie(newCountry:NewCountry):CountryOfMovie,
-         deleteCountryOfMovie(idCountryOfMovie:Int):CountryOfMovie
+         deleteCountryOfMovie(idCountryOfMovie:Int):CountryOfMovie,
+         addWebhook(url:String,type:[String],allType:Boolean):String,
+         
 
 
 

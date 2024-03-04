@@ -65,7 +65,7 @@ import { obtnertoken } from "./src/middlewares"
                try{
               
                 const user=await obtnertoken(token as string)
-                  
+               
                 return user
 
                }catch(e:any){

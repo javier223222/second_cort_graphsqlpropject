@@ -24,6 +24,35 @@ model User{
   liked liked[]
   whoWached whoWached[]
   watchList watchList[]
+  weebHook WeebHook[]
+}
+
+model WeebHook{
+  idWeebHook Int @id @default(autoincrement())
+  idUser Int
+  url String @db.VarChar(200)
+  created_at DateTime @default(now())
+  updated_at DateTime ?
+  user User @relation(fields: [idUser], references: [id])
+  weebHookSucriptionP WeebHookSucriptionP[]
+}
+
+model WeebHookSucriptionP{
+  idWeebHookSucriptionP Int @id @default(autoincrement())
+  idWeebHook Int
+  idTypeEvent Int
+  created_at DateTime @default(now())
+  weebHook WeebHook @relation(fields: [idWeebHook], references: [idWeebHook])
+  typeEvent typeEvent @relation(fields: [idTypeEvent], references: [idTypeEvent])
+
+
+}
+
+model typeEvent{
+  idTypeEvent Int @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+  weebHookSucriptionP WeebHookSucriptionP[]
+
 }
 
 model UserMedia{

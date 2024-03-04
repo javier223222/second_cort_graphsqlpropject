@@ -8,6 +8,9 @@ import ActorController from "../../controller/ActorController";
 import CountryMovieController from "../../controller/CountryMovieController";
 import StudioMovieController from "../../controller/StudioMovieController";
 import GenerOfMovieController from "../../controller/GenerOfMovieController";
+import { TypeEventController } from "../../controller/TypeEventController";
+import { responseAll } from "../../utils/sendWebHooks";
+import { PaginationType } from "../../controller/types/PaginationType";
 const pubsub = new PubSub();
 export const resolvers={
     Query:{
@@ -30,9 +33,32 @@ export const resolvers={
         },
         actorOfMovie:async(_:void,args:any,context:any)=>{
             if(context.username && context){
+                if(args.page && args.limit){
+                    const movie=new MovieController()
+                    const result=await movie.getActorOfMovie(parseInt(args.idMovie),args.page,args.limit)
+                    console.log(result)
+                    
+                    return {
+                        cast:(result as PaginationType).result,  
+                        hasPreviousPage:(result as PaginationType).totalPage!=1,
+                        endCursor:"",
+                        startCursor:"",
+                        currentPage:(result as PaginationType).currentPage,
+                        totalPage:(result as PaginationType).totalPage,
+                        hasNextPage:(result as PaginationType).currentPage<(result as PaginationType).totalPage
+                    
+                    }
+                }
                 const movie=new MovieController()
                 const result=await movie.getActorOfMovie(parseInt(args.idMovie))
-                return result
+
+                return {
+                    cast:result,
+                    hasPreviousPage:false,
+                    endCursor:"",
+                    startCursor:"",
+                    hasNextPage:false
+                }
           }
           throw new Error("No user logged")
           
@@ -57,6 +83,20 @@ export const resolvers={
         getCountryOfMovie:async(_:void,args:any,context:any)=>{
             if(context.username && context){
                try{
+                if(args.page && args.limit){
+                    const countryofMovie:CountryMovieController=new CountryMovieController()
+                    const result=await countryofMovie.getCountryOfMovie(parseInt(args.idMovie),args.page,args.limit)
+                    return {
+                        country:(result as PaginationType).result,  
+                        hasPreviousPage:(result as PaginationType).totalPage!=1,
+                        endCursor:"",
+                        startCursor:"",
+                        currentPage:(result as PaginationType).currentPage,
+                        totalPage:(result as PaginationType).totalPage,
+                        hasNextPage:(result as PaginationType).currentPage<(result as PaginationType).totalPage
+                    
+                    }
+                }
                 const countryofMovie:CountryMovieController=new CountryMovieController()
                 const result=await countryofMovie.getCountryOfMovie(parseInt(args.idMovie))
                 return result
@@ -168,9 +208,14 @@ export const resolvers={
                     title:args.newtittle
                 })
                 pubsub.publish("NEW_MOVIE_TITTLE",{newMovieTittle:result })
-               
+               await responseAll("updatemovie",{
+                type:"updatemovie",
+                newMovieTittle:result
+               })
+
                 return result
             }
+            
             throw new Error("No user logged")
         },
         createUser:async(_:void,args:any)=>{
@@ -181,6 +226,8 @@ export const resolvers={
                     gmail:args.user.gmail,
                     password:args.user.password
                 })
+
+                
                 return result
   
             
@@ -211,6 +258,11 @@ export const resolvers={
                     description:args.actor.description || "sss",
                     image:args.actor.image || "sss"
                },args.idMovie)
+               await responseAll("createactor",{
+                neeActor:result,
+                type:"createactor"
+               })
+
                return result
 
                }catch(e:any){
@@ -228,7 +280,10 @@ export const resolvers={
                     console.log(args.idCast)
                     const actorController=new ActorController()
                     const result:ActorType=await actorController.deletActor(args.idCast)
-                
+                    await responseAll("deleteactor",{
+                        deleteActor:result,
+                        type:"deleteactor"
+                       })
                     return result
                 }catch(e:any){
                     console.log(e.message)
@@ -246,6 +301,14 @@ export const resolvers={
                         idMovie:args.newCountry.idMovie,
                         name:args.newCountry.name
                     })
+                    await responseAll("addcountrymovie",{
+                        type:"addcountrymovie",
+                        ...result,
+                        country:{
+                            idCountry:result.idCountry,
+                            name:result.name,
+                        }
+                       })
                   
                     return {
                         ...result,
@@ -267,6 +330,14 @@ export const resolvers={
                     const countryofMovie:CountryMovieController=new CountryMovieController()
                     const result=await countryofMovie.deleteCountry(args.idCountryOfMovie)
                     console.log(result)
+                    await responseAll("delecountrymovie",{
+                        type:"delecountrymovie",
+                        ...result,
+                        country:{
+                            idCountry:result.idCountry,
+                            name:result.name,
+                        }
+                       })
                     return {
                         ...result,
                         country:{
@@ -279,8 +350,27 @@ export const resolvers={
                 }
             }
             throw new Error("No user logged")
+        },
+        addWebhook:async(_:void,args:any,context:any)=>{
+            if(context){
+                try{
+                   
+                    const webHok=new TypeEventController()
+                    
+                    const result=await webHok.addTypeEvent(args.url,parseInt(context.id),args.type,args.allType)
+                    return result
+                }catch(e:any){
+                    console.log(e.message)
+                    throw new Error("erro al agregar webhook")
+                }
+            }else{
+                console.log("No user logged")
+                throw new Error("No user logged")
+            
+            }
+          
         }
-
+  
     },
     Subscription:{
         newMovieTittle:{
