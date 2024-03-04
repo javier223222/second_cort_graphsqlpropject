@@ -4,6 +4,16 @@ import { PrismaClient, Prisma } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
+    await prisma.typeEvent.createMany({
+      data:[
+        {name:"addcountrymovie"},
+        {name:"createactor"},
+        {name:"delecountrymovie"},
+        {name:"deleteactor"},
+        {name:"updatemovie"}
+      ]
+      
+    })
     await prisma.movie.create({
         data:{
             title:"The Godfather",
@@ -150,6 +160,7 @@ async function main() {
 
         
         },
+
 
         
 
